@@ -9,6 +9,7 @@ import StudyModeScreen from './src/screens/StudyModeScreen';
 import QuizScreen from './src/screens/QuizScreen';
 import ResultsScreen from './src/screens/ResultsScreen';
 import ProgressScreen from './src/screens/ProgressScreen';
+import ReviewAnswersScreen from './src/screens/ReviewAnswersScreen';
 
 const Stack = createStackNavigator();
 
@@ -30,6 +31,7 @@ export default function App() {
         <Stack.Screen name="Quiz" component={QuizScreen} />
         <Stack.Screen name="Results" component={ResultsScreen} />
         <Stack.Screen name="Progress" component={ProgressScreen} />
+        <Stack.Screen name="ReviewAnswers" component={ReviewAnswersScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
