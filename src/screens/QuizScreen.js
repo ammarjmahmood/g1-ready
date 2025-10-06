@@ -18,18 +18,18 @@ import { getRandomQuestions, getQuickQuizQuestions } from '../data/questionBank'
 const { width, height } = Dimensions.get('window');
 
 const QuizScreen = ({ navigation, route }) => {
-  const { type = 'full' } = route.params || {};
+  const { type = 'full', numQuestions, time } = route.params || {};
   const [questions, setQuestions] = useState([]);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [userAnswers, setUserAnswers] = useState([]);
-  const [timeRemaining, setTimeRemaining] = useState(type === 'quick' ? 300 : 1800);
+  const [timeRemaining, setTimeRemaining] = useState(time || (type === 'quick' ? 300 : 1800));
   const [showResult, setShowResult] = useState(false);
 
   useEffect(() => {
-    const questionSet = type === 'quick' ? getQuickQuizQuestions() : getRandomQuestions();
+    const questionSet = type === 'quick' ? getQuickQuizQuestions(numQuestions) : getRandomQuestions();
     setQuestions(questionSet);
-  }, [type]);
+  }, [type, numQuestions]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -62,24 +62,19 @@ const QuizScreen = ({ navigation, route }) => {
   const handleAnswerSelect = (index) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setSelectedAnswer(index);
-  };
-
-  const handleNext = () => {
-    if (selectedAnswer === null) {
-      Alert.alert('Please select an answer', 'You must select an answer before proceeding.');
-      return;
-    }
 
     const newAnswers = [...userAnswers];
-    newAnswers[currentQuestion] = selectedAnswer;
+    newAnswers[currentQuestion] = index;
     setUserAnswers(newAnswers);
 
-    if (currentQuestion < questions.length - 1) {
-      setCurrentQuestion(currentQuestion + 1);
-      setSelectedAnswer(newAnswers[currentQuestion + 1] || null);
-    } else {
-      submitQuiz(newAnswers);
-    }
+    setTimeout(() => {
+      if (currentQuestion < questions.length - 1) {
+        setCurrentQuestion(currentQuestion + 1);
+        setSelectedAnswer(newAnswers[currentQuestion + 1] || null);
+      } else {
+        submitQuiz(newAnswers);
+      }
+    }, 500); // 500ms delay
   };
 
   const handlePrevious = () => {
@@ -221,15 +216,15 @@ const QuizScreen = ({ navigation, route }) => {
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.navButton, styles.nextButton]}
-            onPress={handleNext}
-          >
-            <Text style={styles.nextButtonText}>
-              {currentQuestion === questions.length - 1 ? 'Submit' : 'Next'}
-            </Text>
-            <Ionicons name="chevron-forward" size={24} color="#ffffff" />
-          </TouchableOpacity>
+          {currentQuestion === questions.length - 1 && (
+            <TouchableOpacity
+              style={[styles.navButton, styles.nextButton]}
+              onPress={() => submitQuiz()}
+            >
+              <Text style={styles.nextButtonText}>Submit</Text>
+              <Ionicons name="checkmark" size={24} color="#ffffff" />
+            </TouchableOpacity>
+          )}
         </View>
       </LinearGradient>
     </SafeAreaView>

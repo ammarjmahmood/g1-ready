@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,8 @@ import {
   Image,
   Platform,
   StatusBar,
+  Modal,
+  TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -17,13 +19,36 @@ import * as Haptics from 'expo-haptics';
 const { width, height } = Dimensions.get('window');
 
 const HomeScreen = ({ navigation }) => {
+  const [modalVisible, setModalVisible] = useState(false);
+  const [numQuestions, setNumQuestions] = useState('20');
+  const [time, setTime] = useState('5');
+
   const handlePress = (screen, params) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    if (params) {
+    if (screen === 'Quiz' && params?.type === 'quick') {
+      setModalVisible(true);
+    } else if (params) {
       navigation.navigate(screen, params);
     } else {
       navigation.navigate(screen);
     }
+  };
+
+  const startCustomQuiz = () => {
+    const questionCount = parseInt(numQuestions, 10);
+    const timeLimit = parseInt(time, 10) * 60; // convert minutes to seconds
+
+    if (isNaN(questionCount) || isNaN(timeLimit) || questionCount <= 0 || timeLimit <= 0) {
+      alert('Please enter valid numbers for questions and time.');
+      return;
+    }
+
+    setModalVisible(false);
+    navigation.navigate('Quiz', {
+      type: 'quick',
+      numQuestions: questionCount,
+      time: timeLimit,
+    });
   };
 
   return (
@@ -113,11 +138,101 @@ const HomeScreen = ({ navigation }) => {
           </Text>
         </View>
       </LinearGradient>
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => {
+          setModalVisible(!modalVisible);
+        }}
+      >
+        <View style={styles.centeredView}>
+          <View style={styles.modalView}>
+            <Text style={styles.modalText}>Customize Quick Quiz</Text>
+            <TextInput
+              style={styles.input}
+              onChangeText={setNumQuestions}
+              value={numQuestions}
+              placeholder="Number of Questions"
+              keyboardType="numeric"
+            />
+            <TextInput
+              style={styles.input}
+              onChangeText={setTime}
+              value={time}
+              placeholder="Time in minutes"
+              keyboardType="numeric"
+            />
+            <TouchableOpacity
+              style={[styles.button, styles.buttonClose]}
+              onPress={startCustomQuiz}
+            >
+              <Text style={styles.textStyle}>Start Quiz</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.button, styles.buttonCancel]}
+              onPress={() => setModalVisible(false)}
+            >
+              <Text style={styles.textStyle}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  centeredView: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 22
+  },
+  modalView: {
+    margin: 20,
+    backgroundColor: "white",
+    borderRadius: 20,
+    padding: 35,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5
+  },
+  button: {
+    borderRadius: 20,
+    padding: 10,
+    elevation: 2
+  },
+  buttonClose: {
+    backgroundColor: "#2196F3",
+  },
+  buttonCancel: {
+    backgroundColor: "#f44336",
+    marginTop: 10,
+  },
+  textStyle: {
+    color: "white",
+    fontWeight: "bold",
+    textAlign: "center"
+  },
+  modalText: {
+    marginBottom: 15,
+    textAlign: "center"
+  },
+  input: {
+    height: 40,
+    margin: 12,
+    borderWidth: 1,
+    padding: 10,
+    width: 200,
+    borderRadius: 5,
+  },
   container: {
     flex: 1,
   },
