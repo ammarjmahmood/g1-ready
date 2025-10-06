@@ -156,7 +156,6 @@ const HomeScreen = ({ navigation }) => {
             <Text style={styles.modalTitle}>Customize Quiz</Text>
             
             <View style={styles.pickerContainer}>
-              <Text style={styles.pickerLabel}>Number of Questions</Text>
               <Picker
                 selectedValue={numQuestions}
                 style={styles.picker}
@@ -167,7 +166,6 @@ const HomeScreen = ({ navigation }) => {
             </View>
 
             <View style={styles.timePickerContainer}>
-              <Text style={styles.pickerLabel}>Time Limit</Text>
               <Picker
                 selectedValue={time}
                 style={styles.picker}
