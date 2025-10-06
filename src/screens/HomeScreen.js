@@ -9,8 +9,9 @@ import {
   Platform,
   StatusBar,
   Modal,
-  TextInput,
+  Linking,
 } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,8 +21,12 @@ const { width, height } = Dimensions.get('window');
 
 const HomeScreen = ({ navigation }) => {
   const [modalVisible, setModalVisible] = useState(false);
-  const [numQuestions, setNumQuestions] = useState('20');
-  const [time, setTime] = useState('5');
+  const [disclaimerVisible, setDisclaimerVisible] = useState(false);
+  const [numQuestions, setNumQuestions] = useState(20);
+  const [time, setTime] = useState(5);
+
+  const questionOptions = [10, 15, 20, 25, 30];
+  const timeOptions = [1, 2, 5, 10, 15, 20];
 
   const handlePress = (screen, params) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -35,19 +40,11 @@ const HomeScreen = ({ navigation }) => {
   };
 
   const startCustomQuiz = () => {
-    const questionCount = parseInt(numQuestions, 10);
-    const timeLimit = parseInt(time, 10) * 60; // convert minutes to seconds
-
-    if (isNaN(questionCount) || isNaN(timeLimit) || questionCount <= 0 || timeLimit <= 0) {
-      alert('Please enter valid numbers for questions and time.');
-      return;
-    }
-
     setModalVisible(false);
     navigation.navigate('Quiz', {
       type: 'quick',
-      numQuestions: questionCount,
-      time: timeLimit,
+      numQuestions: numQuestions,
+      time: time * 60, // convert minutes to seconds
     });
   };
 
@@ -58,8 +55,16 @@ const HomeScreen = ({ navigation }) => {
         style={styles.gradient}
       >
         <View style={styles.header}>
-          <Text style={styles.title}>G1 Ready</Text>
-          <Text style={styles.subtitle}>Ontario G1 Test Prep</Text>
+          <View style={styles.headerTop}>
+            <TouchableOpacity style={styles.infoButton} onPress={() => setDisclaimerVisible(true)}>
+              <Ionicons name="information-circle-outline" size={24} color="#ffffff" />
+            </TouchableOpacity>
+            <View style={styles.headerTitleContainer}>
+              <Text style={styles.title}>G1 Ready</Text>
+              <Text style={styles.subtitle}>Ontario G1 Test Prep</Text>
+            </View>
+            <View style={{ width: 24 }} />
+          </View>
           <TouchableOpacity
             style={styles.progressButton}
             onPress={() => handlePress('Progress')}
@@ -146,34 +151,74 @@ const HomeScreen = ({ navigation }) => {
           setModalVisible(!modalVisible);
         }}
       >
-        <View style={styles.centeredView}>
+        <View style={styles.modalOverlay}>
           <View style={styles.modalView}>
-            <Text style={styles.modalText}>Customize Quick Quiz</Text>
-            <TextInput
-              style={styles.input}
-              onChangeText={setNumQuestions}
-              value={numQuestions}
-              placeholder="Number of Questions"
-              keyboardType="numeric"
-            />
-            <TextInput
-              style={styles.input}
-              onChangeText={setTime}
-              value={time}
-              placeholder="Time in minutes"
-              keyboardType="numeric"
-            />
+            <Text style={styles.modalTitle}>Customize Quiz</Text>
+            
+            <View style={styles.pickerContainer}>
+              <Text style={styles.pickerLabel}>Number of Questions</Text>
+              <Picker
+                selectedValue={numQuestions}
+                style={styles.picker}
+                onValueChange={(itemValue) => setNumQuestions(itemValue)}
+              >
+                {questionOptions.map(val => <Picker.Item key={val} label={`${val} Questions`} value={val} />)}
+              </Picker>
+            </View>
+
+            <View style={styles.timePickerContainer}>
+              <Text style={styles.pickerLabel}>Time Limit</Text>
+              <Picker
+                selectedValue={time}
+                style={styles.picker}
+                onValueChange={(itemValue) => setTime(itemValue)}
+              >
+                {timeOptions.map(val => <Picker.Item key={val} label={`${val} Minutes`} value={val} />)}
+              </Picker>
+            </View>
+
             <TouchableOpacity
-              style={[styles.button, styles.buttonClose]}
+              style={styles.startButton}
               onPress={startCustomQuiz}
             >
-              <Text style={styles.textStyle}>Start Quiz</Text>
+              <Text style={styles.startButtonText}>Start Quiz</Text>
             </TouchableOpacity>
+
             <TouchableOpacity
-              style={[styles.button, styles.buttonCancel]}
+              style={styles.cancelButton}
               onPress={() => setModalVisible(false)}
             >
-              <Text style={styles.textStyle}>Cancel</Text>
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={disclaimerVisible}
+        onRequestClose={() => setDisclaimerVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalView}>
+            <Text style={styles.modalTitle}>Disclaimer</Text>
+            <Text style={styles.disclaimerText}>
+              This app is for educational and practice purposes only. It is not affiliated with, endorsed by, or representing the Ontario Ministry of Transportation (MTO) or any other government agency.
+            </Text>
+            <Text style={styles.disclaimerText}>
+              The practice questions are based on the Ontario Driver’s Handbook and are designed to help users study for the G1 written knowledge test.
+            </Text>
+            <TouchableOpacity onPress={() => Linking.openURL('https://www.ontario.ca/page/driving-and-roads')}>
+              <Text style={styles.linkText}>
+                For official information, resources, and licensing requirements, please visit the MTO website.
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setDisclaimerVisible(false)}
+            >
+              <Text style={styles.startButtonText}>Close</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -183,55 +228,70 @@ const HomeScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  centeredView: {
+  modalOverlay: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 22
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalView: {
-    margin: 20,
-    backgroundColor: "white",
+    width: '80%',
+    backgroundColor: 'white',
     borderRadius: 20,
-    padding: 35,
-    alignItems: "center",
-    shadowColor: "#000",
+    padding: 20,
+    alignItems: 'center',
+    shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2
+      height: 2,
     },
     shadowOpacity: 0.25,
     shadowRadius: 4,
-    elevation: 5
+    elevation: 5,
   },
-  button: {
-    borderRadius: 20,
-    padding: 10,
-    elevation: 2
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 20,
   },
-  buttonClose: {
-    backgroundColor: "#2196F3",
+  pickerContainer: {
+    width: '100%',
+    marginBottom: 15,
   },
-  buttonCancel: {
-    backgroundColor: "#f44336",
+  timePickerContainer: {
+    width: '100%',
+    marginBottom: 15,
+    marginTop: 30,
+  },
+  pickerLabel: {
+    fontSize: 16,
+    marginBottom: 5,
+    color: '#333',
+    textAlign: 'center',
+  },
+  picker: {
+    width: '100%',
+    height: 120,
+  },
+  startButton: {
+    backgroundColor: '#4F8EF7',
+    borderRadius: 25,
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    elevation: 2,
     marginTop: 10,
   },
-  textStyle: {
-    color: "white",
-    fontWeight: "bold",
-    textAlign: "center"
+  startButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
-  modalText: {
-    marginBottom: 15,
-    textAlign: "center"
+  cancelButton: {
+    marginTop: 15,
   },
-  input: {
-    height: 40,
-    margin: 12,
-    borderWidth: 1,
-    padding: 10,
-    width: 200,
-    borderRadius: 5,
+  cancelButtonText: {
+    color: '#FF6B6B',
+    fontSize: 14,
   },
   container: {
     flex: 1,
@@ -241,8 +301,43 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight + 20 : 20,
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
     paddingBottom: 10,
+  },
+  headerTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    paddingHorizontal: 20,
+    marginBottom: 10,
+  },
+  headerTitleContainer: {
+    alignItems: 'center',
+  },
+  infoButton: {
+    padding: 5,
+  },
+  disclaimerText: {
+    textAlign: 'center',
+    marginBottom: 15,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  linkText: {
+    color: '#4F8EF7',
+    textDecorationLine: 'underline',
+    textAlign: 'center',
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  closeButton: {
+    backgroundColor: '#4F8EF7',
+    borderRadius: 25,
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    elevation: 2,
+    marginTop: 20,
   },
   title: {
     fontSize: 32,

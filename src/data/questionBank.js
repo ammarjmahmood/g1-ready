@@ -1304,9 +1304,11 @@ export const getG1TestFormat = () => {
   return getRandomQuestions(40, 20, 20);
 };
 
-export const getQuickQuizQuestions = () => {
-  const signs = getQuestionsByType('signs').sort(() => 0.5 - Math.random()).slice(0, 10);
-  const theory = getQuestionsByType('theory').sort(() => 0.5 - Math.random()).slice(0, 10);
+export const getQuickQuizQuestions = (count = 20) => {
+  const signCount = Math.ceil(count / 2);
+  const theoryCount = Math.floor(count / 2);
+  const signs = getQuestionsByType('signs').sort(() => 0.5 - Math.random()).slice(0, signCount);
+  const theory = getQuestionsByType('theory').sort(() => 0.5 - Math.random()).slice(0, theoryCount);
   return [...signs, ...theory].sort(() => 0.5 - Math.random());
 };
 
