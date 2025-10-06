@@ -16,6 +16,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import { getIncorrectQuestions } from '../utils/storage';
+import { useFocusEffect } from '@react-navigation/native';
 
 const { width, height } = Dimensions.get('window');
 
@@ -24,6 +26,17 @@ const HomeScreen = ({ navigation }) => {
   const [disclaimerVisible, setDisclaimerVisible] = useState(false);
   const [numQuestions, setNumQuestions] = useState(20);
   const [time, setTime] = useState(5);
+  const [incorrectQuestions, setIncorrectQuestions] = useState([]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const fetchIncorrectQuestions = async () => {
+        const ids = await getIncorrectQuestions();
+        setIncorrectQuestions(ids);
+      };
+      fetchIncorrectQuestions();
+    }, [])
+  );
 
   const questionOptions = [10, 15, 20, 25, 30];
   const timeOptions = [1, 2, 5, 10, 15, 20];
@@ -106,6 +119,19 @@ const HomeScreen = ({ navigation }) => {
               </Text>
             </View>
           </TouchableOpacity>
+
+          {incorrectQuestions.length > 0 && (
+            <TouchableOpacity
+              style={[styles.button, styles.reviewButton]}
+              onPress={() => handlePress('Quiz', { type: 'review', questionIds: incorrectQuestions })}
+            >
+              <View style={styles.buttonContent}>
+                <Ionicons name="school" size={24} color="#ffffff" />
+                <Text style={styles.buttonText}>Review Mistakes</Text>
+                <Text style={styles.buttonSubtext}>{incorrectQuestions.length} Questions</Text>
+              </View>
+            </TouchableOpacity>
+          )}
 
           <View style={styles.studySection}>
             <Text style={styles.sectionTitle}>Study by Category</Text>
@@ -406,6 +432,10 @@ const styles = StyleSheet.create({
   },
   secondaryButton: {
     backgroundColor: '#ffffff',
+    paddingVertical: 20,
+  },
+  reviewButton: {
+    backgroundColor: '#FF9800',
     paddingVertical: 20,
   },
   buttonContent: {

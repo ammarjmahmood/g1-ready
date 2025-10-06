@@ -3,11 +3,15 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const STORAGE_KEYS = {
   QUIZ_STATS: 'quizStats',
   USER_PREFERENCES: 'userPreferences',
+  INCORRECT_QUESTIONS: 'incorrectQuestions',
 };
 
 export const saveQuizResult = async (result) => {
   try {
     const existingStats = await getQuizStats();
+    if (result.incorrectQuestions) {
+      await saveIncorrectQuestions(result.incorrectQuestions);
+    }
     const newStats = {
       ...existingStats,
       totalQuizzes: existingStats.totalQuizzes + 1,
@@ -78,6 +82,7 @@ export const clearAllData = async () => {
     await AsyncStorage.multiRemove([
       STORAGE_KEYS.QUIZ_STATS,
       STORAGE_KEYS.USER_PREFERENCES,
+      STORAGE_KEYS.INCORRECT_QUESTIONS,
     ]);
     return true;
   } catch (error) {
@@ -117,5 +122,33 @@ export const getUserPreferences = async () => {
       vibrationEnabled: true,
       darkMode: false,
     };
+  }
+};
+
+export const saveIncorrectQuestions = async (incorrectIds) => {
+  try {
+    const existingIds = await getIncorrectQuestions();
+    const newIds = [...new Set([...existingIds, ...incorrectIds])];
+    await AsyncStorage.setItem(STORAGE_KEYS.INCORRECT_QUESTIONS, JSON.stringify(newIds));
+  } catch (error) {
+    console.error('Error saving incorrect questions:', error);
+  }
+};
+
+export const getIncorrectQuestions = async () => {
+  try {
+    const ids = await AsyncStorage.getItem(STORAGE_KEYS.INCORRECT_QUESTIONS);
+    return ids ? JSON.parse(ids) : [];
+  } catch (error) {
+    console.error('Error getting incorrect questions:', error);
+    return [];
+  }
+};
+
+export const clearIncorrectQuestions = async () => {
+  try {
+    await AsyncStorage.removeItem(STORAGE_KEYS.INCORRECT_QUESTIONS);
+  } catch (error) {
+    console.error('Error clearing incorrect questions:', error);
   }
 };

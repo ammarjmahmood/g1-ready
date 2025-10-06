@@ -13,12 +13,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { getRandomQuestions, getQuickQuizQuestions } from '../data/questionBank';
+import { getRandomQuestions, getQuickQuizQuestions, getQuestionsByIds } from '../data/questionBank';
 
 const { width, height } = Dimensions.get('window');
 
 const QuizScreen = ({ navigation, route }) => {
-  const { type = 'full', numQuestions, time } = route.params || {};
+  const { type = 'full', numQuestions, time, questionIds } = route.params || {};
   const [questions, setQuestions] = useState([]);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
@@ -27,9 +27,16 @@ const QuizScreen = ({ navigation, route }) => {
   const [showResult, setShowResult] = useState(false);
 
   useEffect(() => {
-    const questionSet = type === 'quick' ? getQuickQuizQuestions(numQuestions) : getRandomQuestions();
+    let questionSet;
+    if (type === 'review') {
+      questionSet = getQuestionsByIds(questionIds);
+    } else if (type === 'quick') {
+      questionSet = getQuickQuizQuestions(numQuestions);
+    } else {
+      questionSet = getRandomQuestions();
+    }
     setQuestions(questionSet);
-  }, [type, numQuestions]);
+  }, [type, numQuestions, questionIds]);
 
   useEffect(() => {
     const timer = setInterval(() => {

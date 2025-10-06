@@ -26,7 +26,11 @@ const ResultsScreen = ({ navigation, route }) => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
     }
     
-    saveQuizResult({ score, correct, total, type });
+    const incorrectQuestions = questions
+      .filter((q, index) => answers[index] !== q.correctAnswer)
+      .map(q => q.id);
+
+    saveQuizResult({ score, correct, total, type, incorrectQuestions });
   }, [score]);
 
   const getScoreColor = () => {

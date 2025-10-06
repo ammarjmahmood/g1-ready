@@ -1291,6 +1291,11 @@ export const getAllQuestions = () => {
   return [...comprehensiveQuestionBank.signs, ...comprehensiveQuestionBank.theory];
 };
 
+export const getQuestionsByIds = (ids) => {
+  const allQuestions = getAllQuestions();
+  return allQuestions.filter(q => ids.includes(q.id));
+};
+
 export const getRandomQuestions = (count = 40, signCount = 20, theoryCount = 20) => {
   const shuffledSigns = [...comprehensiveQuestionBank.signs].sort(() => 0.5 - Math.random());
   const shuffledTheory = [...comprehensiveQuestionBank.theory].sort(() => 0.5 - Math.random());
